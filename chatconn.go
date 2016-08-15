@@ -37,14 +37,14 @@ func (c *chatConn) Serve () {
 	ip := ips[0]
 	u := user.User{}
 	authed := false
-	c.Write([]byte(ON_CONNECT))
+	//c.Write([]byte(ON_CONNECT))
 	
 	CONNLOOP :
 	for {
 		issued, err := bufio.NewReader(c).ReadString('\n')
 		if err != nil {
-			log(err)
-			user.RemoveUser(u)
+			log("REMOVING USER",err)
+			log(user.RemoveUser(u))
 			break			
 		}
 		message := strings.Trim(issued, "\n\r ")
@@ -54,7 +54,7 @@ func (c *chatConn) Serve () {
 		// Join functions
 		case "JOIN" :
 			if len(command) != 3 {
-				c.Write([]byte(SYNERR_JOIN))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*",SYNERR_JOIN,"error")))
 				continue
 			}
 			if !authed {
@@ -67,76 +67,76 @@ func (c *chatConn) Serve () {
 				// 	c.Write([]byte("Error : Multiple connections per PC is not allowed\n"))
 				// 	break
 				case user.ErrNickAlreadyTaken :
-					c.Write([]byte("Username already Taken\n"))
+					c.Write([]byte(user.FormMessageXML("*ChatPi*","Username already Taken","error")))
 					continue
 				case nil :
-					c.Write([]byte(u.Cookie+"\n"))
+					c.Write([]byte(user.FormMessageXML("*ChatPi*",u.Cookie,"cookie")))
 					authed = true
 					continue
 				}
 			} else {
-				c.Write([]byte("You have already been registered\n"))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","You have already been registered","error")))
 				continue
 			}
 		case "LIST" :
 			if (len(command) != 2) {
 				log(command ," : Wrong SYNTAX")
-				c.Write([]byte(SYNERR_LIST))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*",SYNERR_LIST,"error")))
 				continue
 			}
 			if (command[1] != "USERS") {
-				c.Write([]byte(SYNERR_LIST))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*",SYNERR_LIST,"error")))
 				continue
 			}
 			c.Write([]byte(user.Ulistxml()+"\n"))
 			continue
 		case "MSG" :
 			if !authed {
-				c.Write([]byte("Error : You have to register first.\n"))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","You have to register first","error")))
 				continue
 			}
 			if len(command) < 6 ||
 				command[1] != "WITH" ||
 				command[3] != "TO" {
-				c.Write([]byte(SYNERR_MSG))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*",SYNERR_MSG,"error")))
 				continue
 			}
 			if u.Cookie != command[2] {
 				log(u.Cookie,command[2])
-				c.Write([]byte("Error : Cookie not right for this IP\n"))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","Error : Cookie wrong","error")))
 				continue
 			}
 			reciever, err := user.GetUser(command[4])
 			if err != nil {
-				c.Write([]byte("Error : User not found. Use 'LIST USERS' to view the user list\n"))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","User not found. Use 'LIST USERS' to view the user list","error")))
 				continue
 			}
 			msg := concatenate(command[5:])
 			u.MessageTo(reciever.Nick, msg)
 		case "BROADCAST":
 			if !authed {
-				c.Write([]byte("Error : You have to register first.\n"))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","You have to register first.","error")))
 				continue
 			}
 			if len(command) < 6 || command[1] != "WITH" {
-				c.Write([]byte(SYNERR_BCST))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*",SYNERR_BCST,"error")))
 				continue
 			}
 			if u.Cookie != command[2] {
 				log(u.Cookie,command[2])
-				c.Write([]byte("Error : Cookie not right for this IP\n"))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","Error : Cookie wrong","error")))
 				continue
 			}
 			msg := concatenate(command[5:])
 			u.Broadcast(msg)
 		case "OUT":
 			if authed {
-				c.Write([]byte("Bye have a great time...."))
+				c.Write([]byte(user.FormMessageXML("*ChatPi*","Bye have a great time....","message")))
 				user.RemoveUser(u)
 			}
 			break CONNLOOP
 		default:
-			c.Write([]byte("Command not found"))
+			c.Write([]byte(user.FormMessageXML("*ChatPi*","Command not found","error")))
 		}
 	}
 	c.Close()

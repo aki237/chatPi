@@ -54,31 +54,39 @@ func NewUser (nick,password,ip string, conn net.Conn) (User,error) {
 		Cookie : hash(pad),
 		conn : conn,
 	}
+	ul = append(ul,newuser)
 	chatPi,_ := GetUser("*ChatPi*")
 	for _,val := range ul {
-		if val.Nick == chatPi.Nick {
+		if val.Nick == chatPi.Nick || val.Nick == nick {
 			continue
 		}
-		chatPi.Broadcast(Ulistxml())
+		chatPi.MessageTo(val.Nick,Ulistxml())
 	}
-	ul = append(ul,newuser)
 	return newuser,nil
 }
 
 //
 func RemoveUser (u User) (error) {
-	_, ok := GetUser(u.Cookie)
+	_, ok := GetUser(u.Nick)
 	if ok != nil {
 		return ok
 	}
 	// if bye.IP != u.IP {
 	// 	return ErrUnAuthorised
 	// }
-	for index,_ := range ul {
-		if ul[index] == u {
-			ul = append(ul[:index],ul[index+1:]...)
-			break
+	un := make(Users,0)
+	for _,val := range ul {
+		if val.Cookie != u.Cookie {
+			un = append(un,val)
 		}
+	}
+	ul = un
+	chatPi,_ := GetUser("*ChatPi*")
+	for _,val := range ul {
+		if val.Nick == chatPi.Nick {
+			continue
+		}
+		chatPi.MessageTo(val.Nick,Ulistxml())
 	}
 	return nil
 }
@@ -104,11 +112,15 @@ func GetUser (username string) (User,error) {
 
 //
 func (u *User) MessageTo (username string, msg string) (error) {
+	if (username == "*ChatPi*") {
+		u.conn.Write([]byte(FormMessageXML("*ChatPi*", "I'm a the world's suckiest bot. I haven't been given a brain yet.", "message")))
+		return nil
+	}
 	reciever, err := GetUser(username)
 	if err != nil {
 		return err
 	}
-	reciever.conn.Write([]byte(formMessageXML(u.Nick, msg)))
+	reciever.conn.Write([]byte(FormMessageXML(u.Nick, msg,"message")))
 	return nil
 }
 
@@ -136,8 +148,8 @@ func Ulistxml() string {
 	return ret + "</MEMBERS>"
 }
 
-func formMessageXML (from,message string) string {
+func FormMessageXML (from,message,tpe string) string {
 	message = b64.StdEncoding.EncodeToString([]byte(message))
-	msg := "<MESSAGE><FROM>"+from+"</FROM><CONTENT>"+message+"</CONTENT></MESSAGE>\n"
+	msg := "<MESSAGE><FROM>"+from+"</FROM><CONTENT TYPE=\""+tpe+"\">"+message+"</CONTENT></MESSAGE>\n"
 	return msg
 }

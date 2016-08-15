@@ -12,7 +12,7 @@ func log(a ...interface{}) {
 }
 
 func main() {
-	ip := "192.168.0.100"
+	ip := "10.9.10.148"
 	log("...chatPi...")
 	log("starting server")
 	user.NewChat(ip)
