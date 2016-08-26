@@ -60,7 +60,8 @@ func NewUser (nick,password,ip string, conn net.Conn) (User,error) {
 		if val.Nick == chatPi.Nick || val.Nick == nick {
 			continue
 		}
-		chatPi.MessageTo(val.Nick,Ulistxml())
+		//chatPi.MessageTo(val.Nick,Ulistxml())
+		typeMessageTo(val.Nick, Ulistxml(), "userlist")
 	}
 	return newuser,nil
 }
@@ -86,7 +87,7 @@ func RemoveUser (u User) (error) {
 		if val.Nick == chatPi.Nick {
 			continue
 		}
-		chatPi.MessageTo(val.Nick,Ulistxml())
+		typeMessageTo(val.Nick,Ulistxml(),"userlist")
 	}
 	return nil
 }
@@ -121,6 +122,16 @@ func (u *User) MessageTo (username string, msg string) (error) {
 		return err
 	}
 	reciever.conn.Write([]byte(FormMessageXML(u.Nick, msg,"message")))
+	return nil
+}
+
+//
+func typeMessageTo (username string, msg string, msgtype string) (error) {
+	reciever, err := GetUser(username)
+	if err != nil {
+		return err
+	}
+	reciever.conn.Write([]byte(FormMessageXML("*ChatPi*", msg,msgtype)))
 	return nil
 }
 
