@@ -118,7 +118,8 @@ func (c *chatConn) Serve () {
 				c.Write([]byte(user.FormMessageXML("*ChatPi*","You have to register first.","error")))
 				continue
 			}
-			if len(command) < 6 || command[1] != "WITH" {
+			if len(command) < 4 || command[1] != "WITH" {
+				log("ERROR WITH \"WITH\"")
 				c.Write([]byte(user.FormMessageXML("*ChatPi*",SYNERR_BCST,"error")))
 				continue
 			}
@@ -127,7 +128,7 @@ func (c *chatConn) Serve () {
 				c.Write([]byte(user.FormMessageXML("*ChatPi*","Error : Cookie wrong","error")))
 				continue
 			}
-			msg := concatenate(command[5:])
+			msg := concatenate(command[3:])
 			u.Broadcast(msg)
 		case "OUT":
 			if authed {
