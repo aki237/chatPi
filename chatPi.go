@@ -1,18 +1,19 @@
 package main
 
 import (
-	"net"
 	"fmt"
+	"net"
 	"time"
+
 	"github.com/aki237/chatPi/user"
 )
 
 func log(a ...interface{}) {
-	fmt.Println(time.Now().String()," ",a)
+	fmt.Println(time.Now().String(), " ", a)
 }
 
 func main() {
-	ip := "10.9.10.148"
+	ip := "192.168.0.100"
 	log("...chatPi...")
 	log("starting server")
 	user.NewChat(ip)
