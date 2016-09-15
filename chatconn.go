@@ -139,6 +139,17 @@ CONNLOOP:
 				user.RemoveUser(u)
 			}
 			break CONNLOOP
+		case "INFO":
+			if len(command) < 2 {
+				c.Write([]byte(user.FormMessageXML("private", "*ChatPi*", "Command not found", "error")))
+				continue
+			}
+			IP, err := user.GetUserIP(command[1])
+			if err != nil {
+				c.Write([]byte(user.FormMessageXML("private", "*ChatPi*", err.Error(), "error")))
+				continue
+			}
+			c.Write([]byte(user.FormMessageXML("private", "*ChatPi*", IP, "info")))
 		default:
 			fmt.Println(command, "Not found")
 			c.Write([]byte(user.FormMessageXML("private", "*ChatPi*", "Command not found", "error")))

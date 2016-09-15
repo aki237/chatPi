@@ -111,6 +111,15 @@ func GetUser(username string) (User, error) {
 	return User{}, ErrUserNotFound
 }
 
+// GetUserIP(username string) : Get the given username's IP
+func GetUserIP(username string) (string, error) {
+	User, err := GetUser(username)
+	if err != nil {
+		return "", err
+	}
+	return User.IP, err
+}
+
 //
 func (u *User) MessageTo(username string, msg string) error {
 	if username == "*ChatPi*" {
